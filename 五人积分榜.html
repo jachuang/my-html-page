@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>五人积分榜</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #07C160;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    .player-input {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .player-input label {
+      width: 60px;
+      font-weight: bold;
+    }
+    input, button, select {
+      padding: 8px;
+      margin: 5px 0;
+      box-sizing: border-box;
+    }
+    input[type="number"] {
+      flex: 1;
+      margin-left: 10px;
+    }
+    button {
+      background-color: #07C160;
+      color: white;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      padding: 10px;
+    }
+    button:hover {
+      background-color: #06AD56;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .tab-buttons {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .tab-button {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background-color: #f1f1f1;
+    }
+    .tab-button.active {
+      background-color: #07C160;
+      color: white;
+    }
+    .hidden {
+      display: none;
+    }
+    .clear-data {
+      background-color: #FF4D4F;
+      margin-top: 10px;
+    }
+    .clear-data:hover {
+      background-color: #E04040;
+    }
+    .edit-btn {
+      background-color: #1890FF;
+      margin-right: 5px;
+    }
+    .edit-btn:hover {
+      background-color: #0E77DB;
+    }
+    .delete-btn {
+      background-color: #FF4D4F;
+    }
+    .delete-btn:hover {
+      background-color: #E04040;
+    }
+    .password-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .password-modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      width: 300px;
+      text-align: center;
+    }
+    .password-modal input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .password-modal button {
+      width: 48%;
+      margin: 5px;
+    }
+    .edit-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .edit-modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      width: 300px;
+    }
+    .edit-modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+    }
+    .edit-modal-buttons {
+      display: flex;
+      margin-top: 10px;
+    }
+    .edit-modal-buttons button {
+      flex: 1;
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>五人积分榜</h1>
+
+  <!-- 当前排名（置顶） -->
+  <table id="leaderboard">
+    <thead>
+      <tr>
+        <th>排名</th>
+        <th>姓名</th>
+        <th>累计积分</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 动态生成 -->
+    </tbody>
+  </table>
+
+  <div class="tab-buttons">
+    <div class="tab-button active" onclick="switchTab('add')">添加积分</div>
+    <div class="tab-button" onclick="switchTab('history')">历史记录</div>
+  </div>
+
+  <!-- 添加积分表单 -->
+  <div id="add-tab">
+    <div class="input-group">
+      <input type="date" id="date" style="width: 100%;">
+    </div>
+
+    <div class="player-input">
+      <label>WANG:</label>
+      <input type="number" id="wang" placeholder="输入整数" oninput="validateInteger(this)">
+    </div>
+    <div class="player-input">
+      <label>ZHOU:</label>
+      <input type="number" id="zhou" placeholder="输入整数" oninput="validateInteger(this)">
+    </div>
+    <div class="player-input">
+      <label>ZHANG:</label>
+      <input type="number" id="zhang" placeholder="输入整数" oninput="validateInteger(this)">
+    </div>
+    <div class="player-input">
+      <label>CHEN:</label>
+      <input type="number" id="chen" placeholder="输入整数" oninput="validateInteger(this)">
+    </div>
+    <div class="player-input">
+      <label>HUANG:</label>
+      <input type="number" id="huang" placeholder="输入整数" oninput="validateInteger(this)">
+    </div>
+
+    <div id="sum-error" class="error hidden"></div>
+    <button onclick="addScores()">提交</button>
+    <button class="clear-data" onclick="showPasswordModal('clear')">清理所有数据</button>
+  </div>
+
+  <!-- 历史记录 -->
+  <div id="history-tab" class="hidden">
+    <div class="input-group">
+      <input type="date" id="filter-date" onchange="filterHistory()">
+      <button onclick="clearFilter()">清除筛选</button>
+    </div>
+    <table id="history-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>WANG</th>
+          <th>ZHOU</th>
+          <th>ZHANG</th>
+          <th>CHEN</th>
+          <th>HUANG</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 动态生成 -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 密码验证弹窗 -->
+  <div id="password-modal" class="password-modal">
+    <div class="password-modal-content">
+      <h3 id="password-title">需要密码验证</h3>
+      <input type="password" id="password-input" placeholder="输入密码">
+      <div class="error" id="password-error" style="display: none;">密码错误！</div>
+      <button onclick="verifyPassword()">确认</button>
+      <button onclick="hidePasswordModal()">取消</button>
+    </div>
+  </div>
+
+  <!-- 编辑记录弹窗 -->
+  <div id="edit-modal" class="edit-modal">
+    <div class="edit-modal-content">
+      <h3>编辑记录</h3>
+      <input type="date" id="edit-date">
+      <input type="number" id="edit-wang" placeholder="WANG 积分">
+      <input type="number" id="edit-zhou" placeholder="ZHOU 积分">
+      <input type="number" id="edit-zhang" placeholder="ZHANG 积分">
+      <input type="number" id="edit-chen" placeholder="CHEN 积分">
+      <input type="number" id="edit-huang" placeholder="HUANG 积分">
+      <div id="edit-sum-error" class="error hidden"></div>
+      <div class="edit-modal-buttons">
+        <button onclick="saveEdit()">保存</button>
+        <button onclick="hideEditModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 数据存储结构
+    let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [
+      { name: "WANG", score: 0 },
+      { name: "ZHOU", score: 0 },
+      { name: "ZHANG", score: 0 },
+      { name: "CHEN", score: 0 },
+      { name: "HUANG", score: 0 }
+    ];
+    let history = JSON.parse(localStorage.getItem('history')) || [];
+    let currentEditIndex = -1; // 当前编辑的记录索引
+    let pendingPasswordAction = null; // 待执行的密码验证操作
+
+    // 切换标签页
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('add-tab').classList.add('hidden');
+      document.getElementById('history-tab').classList.add('hidden');
+
+      if (tab === 'add') {
+        document.querySelector('.tab-button:nth-child(1)').classList.add('active');
+        document.getElementById('add-tab').classList.remove('hidden');
+      } else if (tab === 'history') {
+        document.querySelector('.tab-button:nth-child(2)').classList.add('active');
+        document.getElementById('history-tab').classList.remove('hidden');
+        renderHistory();
+      }
+    }
+
+    // 验证输入是否为整数
+    function validateInteger(input) {
+      const value = input.value.trim();
+      if (value && !Number.isInteger(Number(value))) {
+        input.style.borderColor = 'red';
+      } else {
+        input.style.borderColor = '#ddd';
+      }
+      checkSum();
+    }
+
+    // 检查五人积分总和是否为0
+    function checkSum() {
+      const wang = parseInt(document.getElementById('wang').value) || 0;
+      const zhou = parseInt(document.getElementById('zhou').value) || 0;
+      const zhang = parseInt(document.getElementById('zhang').value) || 0;
+      const chen = parseInt(document.getElementById('chen').value) || 0;
+      const huang = parseInt(document.getElementById('huang').value) || 0;
+
+      const sum = wang + zhou + zhang + chen + huang;
+      const errorElement = document.getElementById('sum-error');
+
+      if (sum !== 0) {
+        errorElement.textContent = `错误：五人积分总和必须为 0（当前总和：${sum}）`;
+        errorElement.classList.remove('hidden');
+      } else {
+        errorElement.classList.add('hidden');
+      }
+    }
+
+    // 检查编辑记录的总和是否为0
+    function checkEditSum() {
+      const wang = parseInt(document.getElementById('edit-wang').value) || 0;
+      const zhou = parseInt(document.getElementById('edit-zhou').value) || 0;
+      const zhang = parseInt(document.getElementById('edit-zhang').value) || 0;
+      const chen = parseInt(document.getElementById('edit-chen').value) || 0;
+      const huang = parseInt(document.getElementById('edit-huang').value) || 0;
+
+      const sum = wang + zhou + zhang + chen + huang;
+      const errorElement = document.getElementById('edit-sum-error');
+
+      if (sum !== 0) {
+        errorElement.textContent = `错误：五人积分总和必须为 0（当前总和：${sum}）`;
+        errorElement.classList.remove('hidden');
+        return false;
+      } else {
+        errorElement.classList.add('hidden');
+        return true;
+      }
+    }
+
+    // 添加积分
+    function addScores() {
+      const date = document.getElementById('date').value;
+      const wang = parseInt(document.getElementById('wang').value) || 0;
+      const zhou = parseInt(document.getElementById('zhou').value) || 0;
+      const zhang = parseInt(document.getElementById('zhang').value) || 0;
+      const chen = parseInt(document.getElementById('chen').value) || 0;
+      const huang = parseInt(document.getElementById('huang').value) || 0;
+
+      // 检查日期
+      if (!date) {
+        alert('请选择日期！');
+        return;
+      }
+
+      // 检查输入是否为整数
+      const inputs = [wang, zhou, zhang, chen, huang];
+      if (!inputs.every(Number.isInteger)) {
+        alert('所有积分必须为整数！');
+        return;
+      }
+
+      // 检查总和是否为0
+      const sum = wang + zhou + zhang + chen + huang;
+      if (sum !== 0) {
+        alert('五人积分总和必须为 0！');
+        return;
+      }
+
+      // 添加到历史记录
+      history.push({
+        date,
+        scores: { WANG: wang, ZHOU: zhou, ZHANG: zhang, CHEN: chen, HUANG: huang }
+      });
+      localStorage.setItem('history', JSON.stringify(history));
+
+      // 更新积分榜
+      leaderboard[0].score += wang;
+      leaderboard[1].score += zhou;
+      leaderboard[2].score += zhang;
+      leaderboard[3].score += chen;
+      leaderboard[4].score += huang;
+
+      // 按积分降序排序
+      leaderboard.sort((a, b) => b.score - a.score);
+      localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+
+      // 重新渲染
+      renderLeaderboard();
+      renderHistory();
+
+      // 清空输入
+      document.getElementById('wang').value = '';
+      document.getElementById('zhou').value = '';
+      document.getElementById('zhang').value = '';
+      document.getElementById('chen').value = '';
+      document.getElementById('huang').value = '';
+    }
+
+    // 渲染当前排名
+    function renderLeaderboard() {
+      const tbody = document.querySelector('#leaderboard tbody');
+      tbody.innerHTML = '';
+
+      leaderboard.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.name}</td>
+          <td>${item.score}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // 渲染历史记录
+    function renderHistory(filteredHistory = null) {
+      const data = filteredHistory || history;
+      const tbody = document.querySelector('#history-table tbody');
+      tbody.innerHTML = '';
+
+      data.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.date}</td>
+          <td>${item.scores.WANG}</td>
+          <td>${item.scores.ZHOU}</td>
+          <td>${item.scores.ZHANG}</td>
+          <td>${item.scores.CHEN}</td>
+          <td>${item.scores.HUANG}</td>
+          <td>
+            <button class="edit-btn" onclick="showEditModal(${index})">编辑</button>
+            <button class="delete-btn" onclick="deleteRecord(${index})">删除</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // 筛选历史记录
+    function filterHistory() {
+      const filterDate = document.getElementById('filter-date').value;
+      if (!filterDate) {
+        renderHistory();
+        return;
+      }
+
+      const filtered = history.filter(item => item.date === filterDate);
+      renderHistory(filtered);
+    }
+
+    // 清除筛选
+    function clearFilter() {
+      document.getElementById('filter-date').value = '';
+      renderHistory();
+    }
+
+    // 显示密码弹窗
+    function showPasswordModal(action) {
+      pendingPasswordAction = action;
+      document.getElementById('password-modal').style.display = 'flex';
+      document.getElementById('password-input').value = '';
+      document.getElementById('password-error').style.display = 'none';
+
+      if (action === 'clear') {
+        document.getElementById('password-title').textContent = '清理数据需验证密码';
+      } else if (action === 'edit') {
+        document.getElementById('password-title').textContent = '编辑记录需验证密码';
+      } else if (action === 'delete') {
+        document.getElementById('password-title').textContent = '删除记录需验证密码';
+      }
+    }
+
+    // 隐藏密码弹窗
+    function hidePasswordModal() {
+      document.getElementById('password-modal').style.display = 'none';
+      pendingPasswordAction = null;
+    }
+
+    // 验证密码
+    function verifyPassword() {
+      const password = document.getElementById('password-input').value;
+      const correctPassword = pendingPasswordAction === 'clear' ? '9527' : '9526';
+
+      if (password === correctPassword) {
+        if (pendingPasswordAction === 'clear') {
+          clearData();
+        } else if (pendingPasswordAction === 'edit') {
+          showEditModal(currentEditIndex);
+        } else if (pendingPasswordAction === 'delete') {
+          deleteRecord(currentEditIndex);
+        }
+        hidePasswordModal();
+      } else {
+        document.getElementById('password-error').style.display = 'block';
+      }
+    }
+
+    // 清理所有数据
+    function clearData() {
+      if (confirm('确定要清理所有数据吗？此操作不可恢复！')) {
+        localStorage.removeItem('leaderboard');
+        localStorage.removeItem('history');
+        leaderboard = [
+          { name: "WANG", score: 0 },
+          { name: "ZHOU", score: 0 },
+          { name: "ZHANG", score: 0 },
+          { name: "CHEN", score: 0 },
+          { name: "HUANG", score: 0 }
+        ];
+        history = [];
+        renderLeaderboard();
+        renderHistory();
+        alert('数据已清理！');
+      }
+    }
+
+    // 显示编辑弹窗
+    function showEditModal(index) {
+      currentEditIndex = index;
+      const record = history[index];
+
+      document.getElementById('edit-date').value = record.date;
+      document.getElementById('edit-wang').value = record.scores.WANG;
+      document.getElementById('edit-zhou').value = record.scores.ZHOU;
+      document.getElementById('edit-zhang').value = record.scores.ZHANG;
+      document.getElementById('edit-chen').value = record.scores.CHEN;
+      document.getElementById('edit-huang').value = record.scores.HUANG;
+
+      document.getElementById('edit-sum-error').classList.add('hidden');
+      document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    // 隐藏编辑弹窗
+    function hideEditModal() {
+      document.getElementById('edit-modal').style.display = 'none';
+    }
+
+    // 保存编辑
+    function saveEdit() {
+      if (!checkEditSum()) return;
+
+      const date = document.getElementById('edit-date').value;
+      const wang = parseInt(document.getElementById('edit-wang').value) || 0;
+      const zhou = parseInt(document.getElementById('edit-zhou').value) || 0;
+      const zhang = parseInt(document.getElementById('edit-zhang').value) || 0;
+      const chen = parseInt(document.getElementById('edit-chen').value) || 0;
+      const huang = parseInt(document.getElementById('edit-huang').value) || 0;
+
+      // 更新历史记录
+      history[currentEditIndex] = {
+        date,
+        scores: { WANG: wang, ZHOU: zhou, ZHANG: zhang, CHEN: chen, HUANG: huang }
+      };
+      localStorage.setItem('history', JSON.stringify(history));
+
+      // 重新计算积分榜
+      recalculateLeaderboard();
+
+      // 重新渲染
+      renderLeaderboard();
+      renderHistory();
+      hideEditModal();
+    }
+
+    // 删除记录
+    function deleteRecord(index) {
+      if (confirm('确定要删除这条记录吗？')) {
+        history.splice(index, 1);
+        localStorage.setItem('history', JSON.stringify(history));
+
+        // 重新计算积分榜
+        recalculateLeaderboard();
+
+        // 重新渲染
+        renderLeaderboard();
+        renderHistory();
+      }
+    }
+
+    // 重新计算积分榜
+    function recalculateLeaderboard() {
+      leaderboard = [
+        { name: "WANG", score: 0 },
+        { name: "ZHOU", score: 0 },
+        { name: "ZHANG", score: 0 },
+        { name: "CHEN", score: 0 },
+        { name: "HUANG", score: 0 }
+      ];
+
+      history.forEach(record => {
+        leaderboard[0].score += record.scores.WANG;
+        leaderboard[1].score += record.scores.ZHOU;
+        leaderboard[2].score += record.scores.ZHANG;
+        leaderboard[3].score += record.scores.CHEN;
+        leaderboard[4].score += record.scores.HUANG;
+      });
+
+      leaderboard.sort((a, b) => b.score - a.score);
+      localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+    }
+
+    // 初始渲染
+    renderLeaderboard();
+  </script>
+</body>
+</html>
